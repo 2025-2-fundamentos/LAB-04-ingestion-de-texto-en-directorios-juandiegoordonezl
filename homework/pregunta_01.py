@@ -71,3 +71,35 @@ def pregunta_01():
 
 
     """
+    import os
+    import pandas as pd
+
+    base_dir = "files"
+    input_dir = os.path.join(base_dir, "input")
+    output_dir = os.path.join(base_dir, "output")
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    def build_split_dataframe(split_name):
+        base_split_dir = os.path.join(input_dir, split_name)
+        rows = []
+        if not os.path.isdir(base_split_dir):
+            return pd.DataFrame(columns=["phrase", "target"])
+        for sentiment in sorted(os.listdir(base_split_dir)):
+            sentiment_dir = os.path.join(base_split_dir, sentiment)
+            if not os.path.isdir(sentiment_dir):
+                continue
+            for filename in sorted(os.listdir(sentiment_dir)):
+                if not filename.lower().endswith(".txt"):
+                    continue
+                file_path = os.path.join(sentiment_dir, filename)
+                with open(file_path, "r", encoding="utf-8") as f:
+                    text = f.read().strip()
+                rows.append({"phrase": text, "target": sentiment})
+        return pd.DataFrame(rows, columns=["phrase", "target"])
+
+    train_df = build_split_dataframe("train")
+    test_df = build_split_dataframe("test")
+
+    train_df.to_csv(os.path.join(output_dir, "train_dataset.csv"), index=False)
+    test_df.to_csv(os.path.join(output_dir, "test_dataset.csv"), index=False)
